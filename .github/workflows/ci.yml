@@ -20,6 +20,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
+      - run: pip install ruff
+      - name: ruff lint + format check (blocking)
+        run: |
+          ruff check .
+          ruff format --check .
       - name: secret scan (all tracked files, blocking)
         run: python -m scripts.checks.secret_scan --all
       - name: file size report (all tracked files, advisory)

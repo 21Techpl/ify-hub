@@ -23,8 +23,12 @@ def count_lines(content: str) -> int:
     return content.count("\n") + (0 if content == "" or content.endswith("\n") else 1)
 
 
-def violations(paths: Iterable[str], read_new: Callable[[str], str | None],
-               read_old: Callable[[str], str | None], cfg: dict) -> list[tuple[str, int, int | None]]:
+def violations(
+    paths: Iterable[str],
+    read_new: Callable[[str], str | None],
+    read_old: Callable[[str], str | None],
+    cfg: dict,
+) -> list[tuple[str, int, int | None]]:
     found = []
     for path in (p for p in paths if is_checked(p, cfg)):
         new = read_new(path)
@@ -42,7 +46,9 @@ def _report_all(cfg: dict) -> int:
     sizes = []
     for path in (p for p in git.tracked_files() if is_checked(p, cfg)):
         try:
-            sizes.append((count_lines(Path(path).read_text(encoding="utf-8", errors="replace")), path))
+            sizes.append(
+                (count_lines(Path(path).read_text(encoding="utf-8", errors="replace")), path)
+            )
         except OSError:
             continue
     for lines, path in sorted(sizes, reverse=True):
@@ -62,7 +68,11 @@ def main(argv: list[str]) -> int:
     for path, new, old in found:
         detail = "new file" if old is None else f"was {old}"
         print(f"  {path}: {new} lines ({detail})", file=sys.stderr)
-    hint = "Files already over the limit may shrink but not grow." if cfg["sizePolicy"] == "ratchet" else ""
+    hint = (
+        "Files already over the limit may shrink but not grow."
+        if cfg["sizePolicy"] == "ratchet"
+        else ""
+    )
     print(f"\nSplit the module. {hint}\n", file=sys.stderr)
     return 1
 

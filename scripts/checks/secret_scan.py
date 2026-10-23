@@ -63,9 +63,13 @@ DEFAULT_PATTERNS = (
     Pattern("Stripe live key", re.compile(r"[sr]k_live_[A-Za-z0-9]{20,}")),
     Pattern("Private key block", re.compile(r"-----BEGIN\s[\w\s]*?PRIVATE\sKEY-----")),
     Pattern("JWT", re.compile(r"eyJ[\w-]{10,}\.eyJ[\w-]{10,}\.[\w-]{10,}")),
-    Pattern("Database URL with password",
-            re.compile(r"(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^:/\s@]+:([^@\s]+)@([^/:\s]+)"),
-            _real_database_url),
+    Pattern(
+        "Database URL with password",
+        re.compile(
+            r"(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^:/\s@]+:([^@\s]+)@([^/:\s]+)"
+        ),
+        _real_database_url,
+    ),
     Pattern("Credential assignment", re.compile(ASSIGNED), lambda m: _credential(m.group(1))),
 )
 
@@ -80,7 +84,9 @@ class Finding:
 
 
 def build_patterns(extra: Iterable[dict]) -> tuple:
-    return DEFAULT_PATTERNS + tuple(Pattern(spec["name"], re.compile(spec["regex"])) for spec in extra)
+    return DEFAULT_PATTERNS + tuple(
+        Pattern(spec["name"], re.compile(spec["regex"])) for spec in extra
+    )
 
 
 def is_skipped(path: str, skip: Iterable[str]) -> bool:
@@ -98,8 +104,12 @@ def scan_content(content: str, path: str, patterns: tuple = DEFAULT_PATTERNS) ->
     return findings
 
 
-def scan_files(paths: Iterable[str], read: Callable[[str], str | None], skip: Iterable[str] = (),
-               patterns: tuple = DEFAULT_PATTERNS) -> list[Finding]:
+def scan_files(
+    paths: Iterable[str],
+    read: Callable[[str], str | None],
+    skip: Iterable[str] = (),
+    patterns: tuple = DEFAULT_PATTERNS,
+) -> list[Finding]:
     skip = list(skip)
     findings = []
     for path in paths:
@@ -129,7 +139,10 @@ def main(argv: list[str]) -> int:
     print("\nBLOCKED: possible secrets found:", file=sys.stderr)
     for f in findings:
         print(f"  {f.file}:{f.line}  {f.pattern}", file=sys.stderr)
-    print("\nRead real values from the environment; build test fixtures at runtime.\n", file=sys.stderr)
+    print(
+        "\nRead real values from the environment; build test fixtures at runtime.\n",
+        file=sys.stderr,
+    )
     return 1
 
 

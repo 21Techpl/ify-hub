@@ -53,7 +53,11 @@ def test_short_or_low_variance_strings_are_not_flagged():
 def test_scan_files_applies_secret_skip_rules():
     env_example = Path("does-not-exist-dir/.env.example")
     assert config.load()["secretSkip"]  # skip rules exist
-    findings = scan_files([str(env_example)], lambda p: 'access_secret = "a1b2c3d4e5f6g7h8"\n', ["\\.env\\.example$"])  # pragma: allowlist secret (fixture literal, value is fake)
+    findings = scan_files(
+        [str(env_example)],
+        lambda p: 'access_secret = "a1b2c3d4e5f6g7h8"\n',  # pragma: allowlist secret (fake fixture)
+        ["\\.env\\.example$"],
+    )
     assert findings == []
 
 

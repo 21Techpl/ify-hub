@@ -7,7 +7,12 @@ import subprocess
 
 def _git(*args: str) -> str:
     return subprocess.run(
-        ["git", *args], check=True, capture_output=True, text=True, encoding="utf-8", errors="replace"
+        ["git", *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     ).stdout
 
 
