@@ -1,0 +1,11 @@
+{
+  "limit": 300,
+  "sizePolicy": "ratchet",
+  "codeSuffixes": [".py"],
+  "sizeSkip": ["scripts/checks/"],
+  "secretSkip": ["(^|/)\\.env\\.example$", "(^|/)(uv|poetry|pdm|Pipfile)\\.lock$", "(^|/)package-lock\\.json$"],
+  "extraPatterns": [
+    {"name": "Tuya local key", "regex": "(?i:local_?key)[\"']?\\s*[:=]\\s*[\"']([0-9a-f]{32})[\"']"},
+    {"name": "Tuya access id", "regex": "(?i:access_?id)[\"']?\\s*[:=]\\s*[\"']([a-z0-9]{20})[\"']"}
+  ]
+}
