@@ -24,7 +24,7 @@ def test_config_json_merges_over_defaults():
 
 
 def test_tuya_local_key_is_detected():
-    content = 'TUYA_LOCAL_KEY="1234567890abcdef1234567890abcdef"\n'
+    content = 'TUYA_LOCAL_KEY="1234567890abcdef1234567890abcdef"\n'  # pragma: allowlist secret (fixture literal, value is fake)
     findings = scan_content(content, "app.py", _patterns())
     assert [f.pattern for f in findings] == ["Tuya local key"]
 
@@ -35,7 +35,7 @@ def test_tuya_local_key_in_test_fixture_with_pragma_is_allowed():
 
 
 def test_generic_credential_assignment_is_detected():
-    content = 'access_secret = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"\n'
+    content = 'access_secret = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"\n'  # pragma: allowlist secret (fixture literal, value is fake)
     findings = scan_content(content, "src/adapters/tuya/client.py", _patterns())
     assert any(f.pattern == "Credential assignment" for f in findings)
 
@@ -53,7 +53,7 @@ def test_short_or_low_variance_strings_are_not_flagged():
 def test_scan_files_applies_secret_skip_rules():
     env_example = Path("does-not-exist-dir/.env.example")
     assert config.load()["secretSkip"]  # skip rules exist
-    findings = scan_files([str(env_example)], lambda p: 'access_secret = "a1b2c3d4e5f6g7h8"\n', ["\\.env\\.example$"])
+    findings = scan_files([str(env_example)], lambda p: 'access_secret = "a1b2c3d4e5f6g7h8"\n', ["\\.env\\.example$"])  # pragma: allowlist secret (fixture literal, value is fake)
     assert findings == []
 
 
