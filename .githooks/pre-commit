@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Install with: bash scripts/install-hooks.sh
+# Fast, read-only gates on the staged snapshot; the full test suite runs in CI (ci/test).
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+python -m scripts.checks.secret_scan
+python -m scripts.checks.file_sizes

@@ -12,3 +12,27 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install -r requirements.txt
       - run: pytest -q
+
+  enforcement:
+    name: ci/enforcement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install ruff
+      - name: ruff lint + format check (blocking)
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: secret scan (all tracked files, blocking)
+        run: python -m scripts.checks.secret_scan --all
+      - name: file size report (all tracked files, advisory)
+        run: python -m scripts.checks.file_sizes --all
+      - name: hook smoke test (staged path)
+        run: |
+          git config user.name ci
+          git config user.email ci@example.invalid
+          git add .github/workflows/ci.yml
+          python -m scripts.checks.secret_scan
+          python -m scripts.checks.file_sizes
