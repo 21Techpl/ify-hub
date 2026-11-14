@@ -1,0 +1,82 @@
+# Security gates for agent-generated code.
+#
+# Two independent, fail-closed checks that no agent may relax:
+#   1. secrets  — TruffleHog over the FULL git history, verified credentials only
+#   2. deps     — OSV-Scanner over lockfiles/manifests, against the OSV database
+#
+# Design constraints (deliberate, do not "simplify" away):
+#   * Every third-party action is pinned to a commit SHA, not a tag. A tag can be
+#     moved; a SHA cannot. Bump deliberately, one action at a time.
+#   * `fetch-depth: 0` is required: secrets can be committed in one branch and
+#     cleaned up in the next. A shallow clone cannot see them.
+#   * `--only-verified` keeps the signal readable — TruffleHog validates each
+#     candidate against the live service, so the gate fires on real, active
+#     credentials rather than on every base64-looking string.
+#   * The weekly schedule matters: a dependency can become vulnerable with no
+#     commit at all. A push-only gate misses that.
+#   * This file must stay outside the write scope of the agents whose code it
+#     gates. Protect .github/ with CODEOWNERS + code-owner review.
+
+name: security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1" # Mondays 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: secrets (trufflehog, verified only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan git history for live credentials
+        # Not the trufflehog action: it builds the image reference as
+        # ${IMAGE}:${VERSION}, which makes a digest pin impossible ("invalid
+        # reference format"), and its default is the moving tag :latest. Running
+        # the pinned image directly keeps the scanner itself immutable.
+        run: |
+          docker run --rm \
+            -v "$PWD:/tmp" -w /tmp \
+            ghcr.io/trufflesecurity/trufflehog@sha256:2ec535840f860aa27f11fee20222fb790326ecd66325c96bd49d02ec6af46eca \
+            git file:///tmp \
+              --only-verified \
+              --fail \
+              --no-update \
+              --github-actions
+        # --only-verified: fire on real, active credentials, not every base64 blob.
+        # --fail: exit 183 on findings → job fails → merge blocked.
+
+  dependencies:
+    name: dependencies (osv-scanner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Scan dependencies against OSV
+        uses: google/osv-scanner-action/osv-scanner-action@6bc832ee85d316ab9aeccf71929026841bd0e1ee # v2.7.1
+        with:
+          scan-args: |-
+            --recursive
+            --format gh-annotations
+            ./
