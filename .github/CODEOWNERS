@@ -1,0 +1,3 @@
+# Workflow + scanner config are the gate. Agents must not edit them
+# without human review — see .github/workflows/security.yml.
+/.github/ @21Techpl
