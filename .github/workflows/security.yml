@@ -50,7 +50,13 @@ jobs:
         uses: trufflesecurity/trufflehog@3bd2b5887eb0efb8fa18bfd1d296032924e4ffdc # v3.99.9
         with:
           path: ./
-          extra_args: --only-verified --fail
+          # The action already passes --fail itself; repeating it makes the CLI
+          # abort with "flag 'fail' cannot be repeated". Only the filter goes here.
+          extra_args: --only-verified
+          # The action's default image tag is :latest — pin the digest, or the
+          # scanner binary itself becomes the unpinned part of the gate.
+          version: 3.99.9
+          image: ghcr.io/trufflesecurity/trufflehog@sha256:2ec535840f860aa27f11fee20222fb790326ecd66325c96bd49d02ec6af46eca
 
   dependencies:
     name: dependencies (osv-scanner)
